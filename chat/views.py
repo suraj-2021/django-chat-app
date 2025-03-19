@@ -27,4 +27,4 @@ def receive_message(request):
 
 
 def chat_interface(request):
-    return render(request,'chat_interface.html')
+    return render(request,'chat/chat_interface.html')
