@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 flex justify-center items-center min-h-screen">
+
+    <div class="w-full max-w-md bg-white shadow-lg rounded-xl p-4">
+        <h2 class="text-lg font-semibold text-gray-700 text-center mb-3">Simple Chat Interface</h2>
+
+        <div id="chat-box" class="h-64 overflow-y-scroll border border-green-500 p-3 rounded-md bg-gray-50">
+            <!-- Messages will be displayed here -->
+        </div>
+
+        <div class="mt-4 flex flex-col gap-2">
+            <input id="username" type="text" placeholder="User Name"
+                class="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-400 focus:outline-none">
+            <input id="message" type="text" placeholder="Your Message"
+                class="w-full p-2 border rounded-md focus:ring-2 focus:ring-green-400 focus:outline-none">
+            <button id="submit_button" type="submit"
+                class="bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition">
+                Send Message
+            </button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            function fetchMessages() {
+                $.ajax({
+                    url: '/receive/',
+                    type: 'GET',
+                    success: function (response) {
+                        $('#chat-box').empty();
+                        response.messages.forEach(function (msg) {
+                            $('#chat-box').append(`
+                                <div class="p-2 my-1 rounded-md ${msg.username === $("#username").val() ? 'bg-green-100' : 'bg-gray-200'}">
+                                    <strong>${msg.username}</strong>: ${msg.message} <span class="text-xs text-gray-500">(${msg.timestamp})</span>
+                                </div>
+                            `);
+                        });
+                        $("#chat-box").scrollTop($("#chat-box")[0].scrollHeight);
+                    },
+                    error: function () {
+                        console.log("Error fetching messages!");
+                    }
+                });
+            }
+
+            setInterval(fetchMessages, 2000);
+
+            $("#submit_button").click(function () {
+                var message = $("#message").val();
+                var username = $("#username").val();
+                if (username.trim() === "" || message.trim() === "") {
+                    alert("Please enter both username and message.");
+                    return;
+                }
+
+                $.ajax({
+                    url: '/send/',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        'username': username,
+                        'message': message
+                    }),
+                    success: function (response) {
+                        $('#message').val('');
+                        fetchMessages();
+                    },
+                    error: function () {
+                        console.log("Error sending message");
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+
+</html>
